@@ -32,6 +32,46 @@ out vec4 fs_Col;            // The color of each vertex. This is implicitly pass
 const vec4 lightPos = vec4(5, 5, 3, 1); //The position of our virtual light, which is used to compute the shading of
                                         //the geometry in the fragment shader.
 
+float noise( vec3 p ) {
+    return fract(sin(dot(p, vec3(127.1, 311.7, 631.2))) *
+                 43758.5453);
+}
+
+
+float interpNoise3D(vec3 p) {
+    vec3 intP = floor(p);
+    vec3 fractP = fract(p);
+
+    vec4 vz = vec4(noise(vec3(intP.x, intP.y, intP.z)),
+                    noise(vec3(intP.x + 1.f, intP.y, intP.z)),
+                    noise(vec3(intP.x, intP.y + 1.f, intP.z)), 
+                    noise(vec3(intP.x + 1.f, intP.y + 1.f, intP.z)));
+
+    vec4 vz_1 = vec4(noise(vec3(intP.x, intP.y, intP.z + 1.f)),
+                    noise(vec3(intP.x + 1.f, intP.y, intP.z + 1.f)),
+                    noise(vec3(intP.x, intP.y + 1.f, intP.z + 1.f)), 
+                    noise(vec3(intP.x + 1.f, intP.y + 1.f, intP.z + 1.f)));
+
+
+    return 0.f;
+
+    
+}
+
+float fbm(vec3 pos) {
+    float total = 0.f;
+    float persistence = 0.5f;
+    int octaves = 8;
+    float freq = 2.f;
+    float amp = 0.5f;
+    for (int i = 1; i <= octaves; i++) {
+        total += interpNoise3D(pos) * amp;
+        freq *= 2.f;
+        amp *= persistence;
+    }
+    return total;
+}
+
 void main()
 {
     fs_Col = vs_Col;                         // Pass the vertex colors to the fragment shader for interpolation
