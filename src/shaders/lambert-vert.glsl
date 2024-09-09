@@ -35,7 +35,7 @@ const vec4 lightPos = vec4(5, 5, 3, 1); //The position of our virtual light, whi
 float noise( vec3 p ) {
     return fract(sin(dot(p, vec3(127.1, 311.7, 631.2))) *
                  43758.5453);
-}
+} 
 
 
 float interpNoise3D(vec3 p) {
