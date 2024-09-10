@@ -18,6 +18,7 @@ uniform mat4 u_ModelInvTr;  // The inverse transpose of the model matrix.
 uniform mat4 u_ViewProj;    // The matrix that defines the camera's transformation.
                             // We've written a static matrix for you to use for HW2,
                             // but in HW3 you'll have to generate one yourself
+uniform float u_Time;
 
 in vec4 vs_Pos;             // The array of vertex positions passed to the shader
 
@@ -25,12 +26,61 @@ in vec4 vs_Nor;             // The array of vertex normals passed to the shader
 
 in vec4 vs_Col;             // The array of vertex colors passed to the shader.
 
+out vec4 fs_Pos;
 out vec4 fs_Nor;            // The array of normals that has been transformed by u_ModelInvTr. This is implicitly passed to the fragment shader.
 out vec4 fs_LightVec;       // The direction in which our virtual light lies, relative to each vertex. This is implicitly passed to the fragment shader.
 out vec4 fs_Col;            // The color of each vertex. This is implicitly passed to the fragment shader.
 
 const vec4 lightPos = vec4(5, 5, 3, 1); //The position of our virtual light, which is used to compute the shading of
                                         //the geometry in the fragment shader.
+
+float noise( vec3 p ) {
+    return fract(sin(dot(p, vec3(127.1, 311.7, 631.2))) * 43758.5453);
+} 
+
+float interpNoise3D(vec3 p) {
+    int intPX = int(floor(p.x));
+    int intPY = int(floor(p.y));
+    int intPZ = int(floor(p.z));
+
+    vec3 fractP = fract(p);
+
+    vec4 vz = vec4(noise(vec3(intPX, intPY, intPZ)),
+                    noise(vec3(intPX + 1, intPY, intPZ)),
+                    noise(vec3(intPX, intPY + 1, intPZ)), 
+                    noise(vec3(intPX + 1, intPY + 1, intPZ)));
+
+    vec4 vz_1 = vec4(noise(vec3(intPX, intPY, intPZ + 1)),
+                    noise(vec3(intPX + 1, intPY, intPZ + 1)),
+                    noise(vec3(intPX, intPY + 1, intPZ + 1)), 
+                    noise(vec3(intPX + 1, intPY + 1, intPZ + 1)));
+
+    float x1 = mix(vz.x, vz.y, fractP.x);
+    float x2 = mix(vz.z, vz.w, fractP.x);
+    float x3 = mix(vz_1.x, vz_1.y, fractP.x);
+    float x4 = mix(vz_1.z, vz_1.w, fractP.x);
+    
+    float y1 = mix(x1, x2, fractP.y);
+    float y2 = mix(x3, x4, fractP.y);
+    
+    return mix(y1, y2, fractP.z);
+
+    
+}
+
+float fbm(vec3 pos) {
+    float total = 0.f;
+    float persistence = 0.5f;
+    int octaves = 8;
+    float freq = 3.f;
+    float amp = 0.5f;
+    for (int i = 1; i <= octaves; i++) {
+        total += interpNoise3D(pos * freq + u_Time * 0.008) * amp;
+        freq *= 2.f;
+        amp *= persistence;
+    }
+    return total;
+}
 
 void main()
 {
@@ -43,7 +93,11 @@ void main()
                                                             // perpendicular to the surface after the surface is transformed by
                                                             // the model matrix.
 
-    vec4 modelposition = u_Model * vs_Pos;   // Temporarily store the transformed vertex positions for use below
+    fs_Pos = vs_Pos;
+
+    vec3 offset = vs_Nor.xyz * (sin(u_Time * 0.01) * 0.6 + 0.9) * fbm(vs_Pos.xyz);
+
+    vec4 modelposition = u_Model * vs_Pos  + vec4(offset, 0.f);   // Temporarily store the transformed vertex positions for use below
 
     fs_LightVec = lightPos - modelposition;  // Compute the direction in which the light source lies
 
