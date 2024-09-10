@@ -95,7 +95,7 @@ void main()
 
     fs_Pos = vs_Pos;
 
-    vec3 offset = vs_Nor.xyz * (sin(u_Time * 0.01) * 0.6 + 0.9) * fbm(vs_Pos.xyz);
+    vec3 offset = vs_Nor.xyz  * fbm(vs_Pos.xyz) * (sin(u_Time * 0.01) * 0.5 + 1.8);
 
     vec4 modelposition = u_Model * vs_Pos  + vec4(offset, 0.f);   // Temporarily store the transformed vertex positions for use below
 

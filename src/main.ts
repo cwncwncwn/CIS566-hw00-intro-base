@@ -13,7 +13,7 @@ import Cube from './geometry/Cube';
 // This will be referred to by dat.GUI's functions that add GUI elements.
 const controls = {
   tesselations: 5,
-  color: [85, 145, 132],
+  color: [73, 119, 153],
   'Load Scene': loadScene, // A function pointer, essentially
 };
 
